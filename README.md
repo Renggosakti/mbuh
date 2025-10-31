@@ -3,20 +3,6 @@
 | ------------------------- | ---------- | ------ |
 | Arya Rangga Putra Pratama | 5025241072 |    B   |
 
-  * **Netmask:** `255.255.0.0` (/16) untuk semua node.
-
-| Node | Grup | IP Address |
-| :--- | :--- | :--- |
-| **Lune** | Blue (Web) | `10.110.2.10/16` |
-| **Sciel** | Blue (Web) | `10.110.2.11/16` |
-| **Gustave** | Blue (Web) | `10.110.2.12/16` |
-| **Renoir** | Red (DNS) | `10.110.3.10/16` |
-| **Verso** | Red (DNS) | `10.110.3.11/16` |
-| **Alicia** | Grey (Proxy) | `10.110.4.10/16` |
-| **Esquie** | Green (Client) | `10.110.5.10/16` |
-| **Monocco** | Green (Client) | `10.110.5.11/16` |
-| **Maelle** | Green (Client) | `10.110.5.12/16` |
-
 -----
 
 ## Put your topology config image here\!
@@ -42,29 +28,128 @@
     `Put your screenshot in here`
 
   - Explanation
+Topologi terdiri dari 9 node dengan pembagian subnet sebagai berikut:
 
-    Topologi dibagi menjadi 4 grup subnet utama, semua menggunakan netmask `/16` (`255.255.0.0`) dengan prefix `10.110` untuk memungkinkan komunikasi antar grup:
+| Node    | Fungsi        | IP         | Subnet | Keterangan                        |
+| ------- | ------------- | ---------- | ------ | --------------------------------- |
+| Lune    | Web Server    | 10.110.2.2 | /16    | Halaman profil & info             |
+| Sciel   | Web Server    | 10.110.2.3 | /16    | Halaman profil & info             |
+| Gustave | Web Server    | 10.110.2.4 | /16    | Halaman profil & info             |
+| Renoir  | DNS Master    | 10.110.3.2 | /16    | Server utama zona DNS             |
+| Verso   | DNS Slave     | 10.110.3.3 | /16    | Salinan data DNS Master           |
+| Alicia  | Reverse Proxy | 10.110.4.2 | /16    | Mengatur forward & load balancing |
+| Esquie  | Client        | 10.110.5.2 | /16    | Penguji DNS & web                 |
+| Monocco | Client        | 10.110.5.3 | /16    | Penguji DNS & web                 |
+| Maelle  | Client        | 10.110.5.4 | /16    | Penguji DNS & web                 |
 
-      * **Blue Group (Web Servers):** Menggunakan prefix `10.110.2.X`. Terdiri dari Lune (`.10`), Sciel (`.11`), dan Gustave (`.12`).
-      * **Red Group (DNS Servers):** Menggunakan prefix `10.110.3.X`. Terdiri dari Renoir (Master, `.10`) dan Verso (Slave, `.11`).
-      * **Grey Group (Reverse Proxy):** Menggunakan prefix `10.110.4.X`. Terdiri dari Alicia (`.10`).
-      * **Green Group (Clients):** Menggunakan prefix `10.110.5.X`. Terdiri dari Esquie (`.10`), Monocco (`.11`), dan Maelle (`.12`).
+### Konfigurasi IP (dijalankan manual di masing-masing node)
+
+#### Lune
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.2.2/16 dev eth0
+ip link set eth0 up
+```
+
+#### Sciel
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.2.3/16 dev eth0
+ip link set eth0 up
+```
+
+#### Gustave
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.2.4/16 dev eth0
+ip link set eth0 up
+```
+
+#### Renoir (DNS Master)
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.3.2/16 dev eth0
+ip link set eth0 up
+```
+
+#### Verso (DNS Slave)
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.3.3/16 dev eth0
+ip link set eth0 up
+```
+
+#### Alicia (Reverse Proxy)
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.4.2/16 dev eth0
+ip link set eth0 up
+```
+
+#### Esquie
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.5.2/16 dev eth0
+ip link set eth0 up
+```
+
+#### Monocco
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.5.3/16 dev eth0
+ip link set eth0 up
+```
+
+#### Maelle
+
+```bash
+ip addr flush dev eth0
+ip addr add 10.110.5.4/16 dev eth0
+ip link set eth0 up
+```
+
+Setelah itu tambahkan DNS resolver di semua node:
+
+```bash
+echo "nameserver 10.110.3.2" > /etc/resolv.conf
+```
+
+lalu coba testing ping ke masing-masing note:
+
+```bash
+ping -c 3 10.110.3.10   # Dari Lune ke Renoir
+ping -c 3 10.110.4.10   # Dari Renoir ke Alicia
+ping -c 3 10.110.5.10   # Dari Alicia ke Esquie
+```
+---
+
 
 <br>
 
 ## Soal 2
 
-> Buatlah konfigurasi untuk domain
-> **lune33.com** → ke IP node Lune ,
+> Buatlah konfigurasi untuk domain 
+> **lune33.com** → ke IP node Lune , 
 > **sciel33.com** → ke IP node Sciel ,
-> **gustave33.com** → ke IP node Gustave
+> **gustave33.com** → ke IP node Gustave 
 > pada DNS Master Renoir. Kemudian konfigurasikan node Verso sebagai DNS Slave yang bekerja untuk DNS Master Renoir.
 
-> *Dns Configuration , on the DNS Master (Renoir)*
-> *lune33.com → IP of node Lune ,*
-> *sciel33.com → IP of node Sciel ,*
-> *gustave33.com → IP of node Gustave*
-> *Configure Verso as the DNS Slave that works with DNS Master Renoir.*
+> _Dns Configuration , on  the DNS Master (Renoir)_
+> _lune33.com → IP of node Lune ,_
+> _sciel33.com → IP of node Sciel ,_
+> _gustave33.com → IP of node Gustave_
+> _Configure Verso as the DNS Slave that works with DNS Master Renoir._
+
+**Answer:**
+
 
 **Answer:**
 
@@ -74,75 +159,144 @@
 
   - Explanation
 
-    1.  **Renoir (Master - 10.110.3.10):**
-        `apt-get install bind9`
-        Edit `/etc/bind/named.conf.local` untuk mendaftarkan zona master dan mengizinkan transfer ke Verso:
+  ### DNS Master (Renoir)
 
-        ```conf
-        zone "lune33.com" {
-            type master;
-            file "/etc/bind/zones/db.lune33.com";
-            allow-transfer { 10.110.3.11; }; // Izinkan Verso
-        };
+```bash
+apt-get update
+apt-get install bind9 -y
+```
 
-        zone "sciel33.com" {
-            type master;
-            file "/etc/bind/zones/db.sciel33.com";
-            allow-transfer { 10.110.3.11; }; // Izinkan Verso
-        };
+Edit file `/etc/bind/named.conf.local`
 
-        zone "gustave33.com" {
-            type master;
-            file "/etc/bind/zones/db.gustave33.com";
-            allow-transfer { 10.110.3.11; }; // Izinkan Verso
-        };
-        ```
+```bash
+zone "lune33.com" {
+    type master;
+    file "/etc/bind/lune33/db.lune33.com";
+};
 
-        Buat file zona (contoh `/etc/bind/zones/db.lune33.com`):
+zone "sciel33.com" {
+    type master;
+    file "/etc/bind/sciel33/db.sciel33.com";
+};
 
-        ```
-        $TTL 604800
-        @   IN  SOA renoir.lune33.com. admin.lune33.com. (
-                2025102501 ; serial
-                604800     ; refresh
-                86400      ; retry
-                2419200    ; expire
-                604800 )   ; negative cache ttl
+zone "gustave33.com" {
+    type master;
+    file "/etc/bind/gustave33/db.gustave33.com";
+};
 
-        ; NS
-            IN  NS  renoir.lune33.com.
-        ; A records
-        renoir       IN  A  10.110.3.10
-        lune33.com.  IN  A  10.110.2.10  ; <-- Jawaban: lune33.com -> IP Lune
-        ```
+zone "2.110.10.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.10.110.2";
+};
+```
 
-        (File zona `db.sciel33.com` dibuat serupa dengan `A record` ke `10.110.2.11` dan `db.gustave33.com` ke `10.110.2.12`)
+Lalu buat folder dan zone file:
 
-    2.  **Verso (Slave - 10.110.3.11):**
-        `apt-get install bind9`
-        Edit `/etc/bind/named.conf.local` untuk menyalin (slave) zona dari master:
+```bash
+mkdir -p /etc/bind/lune33 /etc/bind/sciel33 /etc/bind/gustave33
+```
 
-        ```conf
-        zone "lune33.com" {
-            type slave;
-            masters { 10.110.3.10; }; // IP Renoir
-            file "/var/cache/bind/db.lune33.com";
-        };
+**File `/etc/bind/lune33/db.lune33.com`**
 
-        zone "sciel33.com" {
-            type slave;
-            masters { 10.110.3.10; };
-            file "/var/cache/bind/db.sciel33.com";
-        };
+```bash
+$TTL 604800
+@ IN SOA lune33.com. root.lune33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+@ IN NS lune33.com.
+@ IN A 10.110.2.2
+www IN CNAME lune33.com.
+```
 
-        zone "gustave33.com" {
-            type slave;
-            masters { 10.110.3.10; };
-            file "/var/cache/bind/db.gustave33.com";
-        };
-        ```
+**File `/etc/bind/sciel33/db.sciel33.com`**
 
-        Restart BIND9 di kedua node (`systemctl restart bind9`).
+```bash
+$TTL 604800
+@ IN SOA sciel33.com. root.sciel33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+@ IN NS sciel33.com.
+@ IN A 10.110.2.3
+www IN CNAME sciel33.com.
+```
+
+**File `/etc/bind/gustave33/db.gustave33.com`**
+
+```bash
+$TTL 604800
+@ IN SOA gustave33.com. root.gustave33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+@ IN NS gustave33.com.
+@ IN A 10.110.2.4
+```
+
+**File `/etc/bind/db.10.110.2` (Reverse DNS)**
+
+```bash
+$TTL 604800
+@ IN SOA renoir.lune33.com. root.renoir.lune33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+@ IN NS renoir.
+2 IN PTR lune33.com.
+3 IN PTR sciel33.com.
+4 IN PTR gustave33.com.
+```
+
+Restart DNS:
+
+```bash
+service bind9 restart
+```
+
+### DNS Slave (Verso)
+
+```bash
+apt-get install bind9 -y
+```
+
+Edit `/etc/bind/named.conf.local`
+
+```bash
+zone "lune33.com" {
+    type slave;
+    masters { 10.110.3.2; };
+    file "/var/lib/bind/lune33.com";
+};
+
+zone "sciel33.com" {
+    type slave;
+    masters { 10.110.3.2; };
+    file "/var/lib/bind/sciel33.com";
+};
+
+zone "gustave33.com" {
+    type slave;
+    masters { 10.110.3.2; };
+    file "/var/lib/bind/gustave33.com";
+};
+```
+
+Restart DNS Slave:
+
+```bash
+service bind9 restart
+```
+
+---
 
 <br>
 
@@ -150,11 +304,12 @@
 
 > Tambahkan subdomain alias berupa exp.lune33.com yang mengarah ke alamat lune33.com dan exp.sciel33.com yang mengarah ke alamat sciel33.com (HINT: CNAME). Selain itu, tambahkan konfigurasi untuk melakukan reverse DNS lookup untuk domain gustave33.com
 
-> *Subdomain Configuration,*
-> *Add alias subdomains (HINT: CNAME).*
-> *exp.lune33.com → alias to lune33.com*
-> *exp.sciel33.com → alias to sciel33.com*
-> *Also, configure reverse DNS lookup for the domain gustave33.com.*
+> _Subdomain Configuration,_ 
+> _Add alias subdomains (HINT: CNAME)._
+> _exp.lune33.com → alias to lune33.com_
+> _exp.sciel33.com → alias to sciel33.com_
+> _Also, configure reverse DNS lookup for the domain gustave33.com._
+
 
 **Answer:**
 
@@ -164,53 +319,158 @@
 
   - Explanation
 
-    Konfigurasi ini dilakukan di **Renoir (Master)**.
+   ### Struktur Zona DNS Master Renoir
 
-    1.  **CNAME (Alias):**
-        Edit file zona `db.lune33.com` dan `db.sciel33.com` yang ada di Renoir:
+File yang perlu kamu ubah atau pastikan sudah ada:
 
-          * Di `/etc/bind/zones/db.lune33.com`:
-            ```conf
-            ...
-            lune33.com.  IN  A  10.110.2.10
-            exp          IN  CNAME lune33.com. ; <-- Jawaban CNAME Lune
-            ```
-          * Di `/etc/bind/zones/db.sciel33.com`:
-            ```conf
-            ...
-            sciel33.com. IN  A  10.110.2.11
-            exp          IN  CNAME sciel33.com. ; <-- Jawaban CNAME Sciel
-            ```
+| File                               | Fungsi                      | Lokasi         |
+| ---------------------------------- | --------------------------- | -------------- |
+| `/etc/bind/named.conf.local`       | Daftar zone                 | Master config  |
+| `/etc/bind/sites/db.lune33.com`    | Zona domain `lune33.com`    | Zona data      |
+| `/etc/bind/sites/db.sciel33.com`   | Zona domain `sciel33.com`   | Zona data      |
+| `/etc/bind/sites/db.gustave33.com` | Zona domain `gustave33.com` | Zona data      |
+| `/etc/bind/sites/db.10.110.2`      | Zona reverse DNS            | Reverse lookup |
 
-    2.  **Reverse DNS (PTR):**
-        Daftarkan zona reverse di `/etc/bind/named.conf.local` (Renoir):
+---
 
-        ```conf
-        zone "110.10.in-addr.arpa" {
-            type master;
-            file "/etc/bind/zones/db.10.110";
-            allow-transfer { 10.110.3.11; };
-        };
-        ```
+## Menambahkan CNAME alias
 
-        Buat file zona reverse `/etc/bind/zones/db.10.110`:
+Buka:
 
-        ```
-        $TTL 604800
-        @ IN SOA renoir.lune33.com. admin.lune33.com. (
-              2025102501 ; serial
-              604800
-              86400
-              2419200
-              604800 )
+```bash
+nano /etc/bind/sites/db.lune33.com
+```
 
-            IN NS renoir.lune33.com.
+Isi lengkapnya (kalau belum):
 
-        ; PTR untuk Gustave (10.110.2.12)
-        12.2    IN PTR gustave33.com. ; <-- Jawaban Reverse DNS
-        ```
+```bash
+$TTL 604800
+@ IN SOA lune33.com. root.lune33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@ IN NS lune33.com.
+@ IN A 10.110.2.2
 
-        (Pastikan Verso juga dikonfigurasi sebagai slave untuk zona `110.10.in-addr.arpa` ini agar reverse lookup tetap berfungsi saat Renoir mati).
+; 🔽 Tambahkan subdomain alias (CNAME)
+exp IN CNAME lune33.com.
+```
+
+Simpan & keluar (`Ctrl+X`, lalu `Y` dan `Enter`).
+
+---
+
+Buka:
+
+```bash
+nano /etc/bind/sites/db.sciel33.com
+```
+
+Isi lengkapnya:
+
+```bash
+$TTL 604800
+@ IN SOA sciel33.com. root.sciel33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@ IN NS sciel33.com.
+@ IN A 10.110.2.3
+
+; 🔽 Tambahkan subdomain alias (CNAME)
+exp IN CNAME sciel33.com.
+```
+
+---
+
+## Menambahkan Reverse DNS untuk Gustave
+
+Buka file:
+
+```bash
+nano /etc/bind/sites/db.10.110.2
+```
+
+Isi:
+
+```bash
+$TTL 604800
+@ IN SOA renoir.lune33.com. root.renoir.lune33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@ IN NS renoir.
+
+; 🔽 Reverse mapping (PTR)
+2 IN PTR lune33.com.
+3 IN PTR sciel33.com.
+4 IN PTR gustave33.com.
+```
+
+---
+
+## Restart service DNS
+
+```bash
+service bind9 restart
+```
+
+Atau:
+
+```bash
+pkill named && named
+```
+
+---
+
+## Uji dari Client (Esquie, Monocco, Maelle)
+
+Pastikan resolver diarahkan ke Renoir:
+
+```bash
+echo "nameserver 10.110.3.2" > /etc/resolv.conf
+```
+
+Lalu tes:
+
+```bash
+# Alias CNAME test
+ping -c 3 exp.lune33.com
+ping -c 3 exp.sciel33.com
+
+# Reverse DNS test
+host 10.110.2.4
+```
+
+Hasil yang diharapkan:
+
+```
+exp.lune33.com is an alias for lune33.com.
+lune33.com has address 10.110.2.2
+
+exp.sciel33.com is an alias for sciel33.com.
+sciel33.com has address 10.110.2.3
+
+4.2.110.10.in-addr.arpa domain name pointer gustave33.com.
+```
+
+---
+
+**Kesimpulan:**
+
+* `exp.lune33.com` dan `exp.sciel33.com` berfungsi (CNAME alias sukses)
+* `10.110.2.4` bisa di-*resolve balik* ke `gustave33.com` (reverse DNS sukses)
+
+---
 
 <br>
 
@@ -218,7 +478,8 @@
 
 > Buatlah subdomain berupa expedition.gustave33.com dan delegasikan subdomain tersebut dari Renoir ke Verso dengan alamat IP tujuan adalah node Gustave. Kemudian, matikan Renoir dan coba lakukan ping ke semua domain dan subdomain yang telah dikonfigurasikan pada nomor 2, 3, dan 4.
 
-> *Create a subdomain expedition.gustave33.com and delegate it from Renoir to Verso, with the target IP being node Gustave.Then, turn off Renoir and try pinging all domains and subdomains configured in tasks 2, 3, and 4 to verify delegation works correctly.*
+> _Create a subdomain expedition.gustave33.com and delegate it from Renoir to Verso, with the target IP being node Gustave.Then, turn off Renoir and try pinging all domains and subdomains configured in tasks 2, 3, and 4 to verify delegation works correctly._
+
 
 **Answer:**
 
@@ -228,68 +489,190 @@
 
   - Explanation
 
-    1.  **Delegasi di Renoir (Master):**
-        Edit file zona `/etc/bind/zones/db.gustave33.com` di Renoir untuk mendelegasikan `expedition` ke Verso:
+    ## LANGKAH 1 — Konfigurasi di **Renoir (DNS Master)**
 
-        ```conf
-        ...
-        ; Delegation for expedition.gustave33.com to Verso
-        expedition   IN NS verso.gustave33.com.
+### 1. Buka file zona `gustave33.com`
 
-        ; Glue record (A record untuk NS)
-        verso.gustave33.com. IN A 10.110.3.11
-        ```
+```bash
+nano /etc/bind/sites/db.gustave33.com
+```
 
-        Reload BIND9 di Renoir (`rndc reload`).
+tambahkan baris-baris berikut di akhir file:
 
-    2.  **Zona Master di Verso (Slave):**
-        Sekarang Verso menjadi *master* untuk subdomain ini. Edit `/etc/bind/named.conf.local` di **Verso**:
+```bash
+$TTL 604800
+@ IN SOA gustave33.com. root.gustave33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@ IN NS gustave33.com.
+@ IN A 10.110.2.4
 
-        ```conf
-        zone "expedition.gustave33.com" {
-            type master;
-            file "/etc/bind/zones/db.expedition.gustave33.com";
-        };
-        ```
+; 🔽 Delegasi ke Verso
+expedition IN NS verso.gustave33.com.
+verso.gustave33.com. IN A 10.110.3.3
+```
 
-        Buat file zona `/etc/bind/zones/db.expedition.gustave33.com` di **Verso**:
+Penjelasan:
 
-        ```
-        $TTL 604800
-        @ IN SOA verso.expedition.gustave33.com. admin.expedition.gustave33.com. ( ... )
-        @   IN NS verso.expedition.gustave33.com.
-        verso.expedition.gustave33.com. IN A 10.110.3.11
+* `expedition IN NS verso.gustave33.com.`
+  → Menandakan subdomain `expedition.gustave33.com` **dikelola oleh Verso**
+* `verso.gustave33.com. IN A 10.110.3.3`
+  → Memberi tahu IP dari DNS Slave (Verso)
 
-        ; Alamat IP tujuan adalah node Gustave
-        @ IN A 10.110.2.12
-        ```
+---
 
-        Restart BIND9 di Verso (`systemctl restart bind9`).
+### 2. Restart Bind9
 
-    3.  **Pengujian:**
-        Matikan service BIND9 di Renoir (`systemctl stop bind9`). Dari node Client (yang menggunakan Verso `10.110.3.11` sebagai nameserver), lakukan `ping`:
+```bash
+service bind9 restart
+```
 
-        ```bash
-        ping -c 3 lune33.com        # Sukses (dilayani oleh cache slave Verso)
-        ping -c 3 exp.sciel33.com   # Sukses (dilayani oleh cache slave Verso)
-        ping -c 3 expedition.gustave33.com # Sukses (dilayani oleh Verso sebagai master)
-        ```
+atau :
 
-        Ini membuktikan Verso berhasil mengambil alih layanan DNS saat Renoir mati.
+```bash
+pkill named && named
+```
+
+---
+
+## LANGKAH 2 — Konfigurasi di **Verso (DNS Slave)**
+
+Buat zona baru di Verso untuk menangani subdomain `expedition.gustave33.com`.
+
+### 1. Buka file konfigurasi zona di Verso
+
+```bash
+nano /etc/bind/named.conf.local
+```
+
+Tambahkan di paling bawah:
+
+```bash
+zone "expedition.gustave33.com" {
+    type master;
+    file "/etc/bind/sites/db.expedition.gustave33.com";
+};
+```
+
+Pastikan foldernya ada:
+
+```bash
+mkdir -p /etc/bind/sites
+```
+
+---
+
+### 2. Buat file zona untuk expedition
+
+```bash
+nano /etc/bind/sites/db.expedition.gustave33.com
+```
+
+Isi dengan:
+
+```bash
+$TTL 604800
+@ IN SOA expedition.gustave33.com. root.expedition.gustave33.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@ IN NS verso.gustave33.com.
+@ IN A 10.110.2.4
+
+verso IN A 10.110.3.3
+```
+
+Penjelasan:
+
+* Subdomain ini punya **A record ke IP Gustave (10.110.2.4)**
+* Dan **NS record ke Verso (10.110.3.3)** supaya authoritative
+
+---
+
+### 3. Restart Bind di Verso
+
+```bash
+service bind9 restart
+
+pkill named && named
+```
+
+---
+
+## LANGKAH 3 — Uji Delegasi
+
+Pastikan dari **client (misal Esquie)** resolver-nya diarahkan ke DNS Slave Verso:
+
+```bash
+echo "nameserver 10.110.3.3" > /etc/resolv.conf
+```
+
+Lalu jalankan tes:
+
+```bash
+dig expedition.gustave33.com +short
+```
+
+Output yang diharapkan:
+
+```
+10.110.2.4
+```
+
+Coba juga:
+
+```bash
+ping -c 3 expedition.gustave33.com
+```
+
+---
+
+## LANGKAH 4 — Uji Ketahanan (Matikan Renoir)
+
+Sekarang simulasi kalau DNS Master Renoir mati:
+
+Di node Renoir:
+
+```bash
+pkill named
+# atau matikan node sekalian
+poweroff
+```
+
+Lalu dari client (Esquie):
+
+```bash
+dig @10.110.3.3 expedition.gustave33.com +short
+dig @10.110.3.3 lune33.com +short
+dig @10.110.3.3 sciel33.com +short
+dig @10.110.3.3 gustave33.com +short
+ping -c 3 expedition.gustave33.com
+```
+
+---
+
+
 
 <br>
 
 ## Soal 5
 
-> Konfigurasi node Lune, Sciel, dan Gustave agar berfungsi sebagai web server Nginx yang akan menyajikan halaman profil, dimana halaman profil akan berbeda untuk setiap node. Dari folder berikut, gunakan profile\_lune.html untuk menyajikan halaman profil di node Lune, profile\_sciel.html untuk menyajikan halaman profil di node Sciel, dan profile\_gustave.html untuk menyajikan halaman profil di node Gustave. Konfigurasikan Nginx di setiap node untuk menyimpan custom access log ke file /tmp/access.log dan error log ke file /tmp/error.log.
+> Konfigurasi node Lune, Sciel, dan Gustave agar berfungsi sebagai web server Nginx yang akan menyajikan halaman profil, dimana halaman profil akan berbeda untuk setiap node. Dari folder berikut, gunakan profile_lune.html untuk menyajikan halaman profil di node Lune, profile_sciel.html untuk menyajikan halaman profil di node Sciel, dan profile_gustave.html untuk menyajikan halaman profil di node Gustave. Konfigurasikan Nginx di setiap node untuk menyimpan custom access log ke file /tmp/access.log dan error log ke file /tmp/error.log. 
 
-> *Configure Lune, Sciel, and Gustave as Nginx web servers serving profile pages, where each node has a unique profile page:*
-> *- Use profile\_lune.html for Lune*
-> *- Use profile\_sciel.html for Sciel*
-> *- Use profile\_gustave.html for Gustave*
-> *In each web server, Configure Nginx to store custom logs:*
-> *- Access log: /tmp/access.log*
-> *- Error log: /tmp/error.log*
+> _Configure Lune, Sciel, and Gustave as Nginx web servers serving profile pages, where each node has a unique profile page:_
+> _- Use profile_lune.html for Lune_
+> _- Use profile_sciel.html for Sciel_
+> _- Use profile_gustave.html for Gustave_
+> _In each web server, Configure Nginx to store custom logs:_
+> _- Access log: /tmp/access.log_
+> _- Error log: /tmp/error.log_
 
 **Answer:**
 
@@ -299,66 +682,236 @@
 
   - Explanation
 
-    Di setiap node web server (Lune, Sciel, Gustave):
+   ## Struktur file di setiap node
 
-    1.  Instal Nginx: `apt-get update && apt-get install -y nginx`
-    2.  Buat direktori web dan salin file HTML. Contoh di **Lune**:
-        ```bash
-        mkdir -p /var/www/lune
-        # Asumsi file HTML ada di /root atau /mnt/data
-        cp /mnt/data/profile_lune.html /var/www/lune/index.html
-        cp /mnt/data/info.html /var/www/lune/info.html
-        chown -R www-data:www-data /var/www/lune
-        ```
-        (Lakukan hal serupa di Sciel untuk `profile_sciel.html` dan Gustave untuk `profile_gustave.html`).
-    3.  Buat file konfigurasi Nginx (contoh di Lune `/etc/nginx/sites-available/lune`):
-        ```nginx
-        server {
-            listen 80;
-            server_name lune33.com;
+| Node        | HTML Profil            | IP Address | Fungsi                 |
+| ----------- | ---------------------- | ---------- | ---------------------- |
+| **Lune**    | `profile_lune.html`    | 10.110.2.2 | Halaman profil Lune    |
+| **Sciel**   | `profile_sciel.html`   | 10.110.2.3 | Halaman profil Sciel   |
+| **Gustave** | `profile_gustave.html` | 10.110.2.4 | Halaman profil Gustave |
 
-            root /var/www/lune;
-            index index.html; # Menyajikan profile_lune.html
+---
 
-            # Jawaban: Konfigurasi log
-            access_log /tmp/access.log;
-            error_log /tmp/error.log;
+## LANGKAH 1 — Install & siapkan Nginx
 
-            location / {
-                try_files $uri $uri/ =404;
-            }
-        }
-        ```
-    4.  Aktifkan situs: `ln -s /etc/nginx/sites-available/lune /etc/nginx/sites-enabled/`
-    5.  Hapus konfigurasi default: `rm /etc/nginx/sites-enabled/default`
-    6.  Reload Nginx: `systemctl reload nginx`
+Jalankan di masing-masing node web server:
+
+```bash
+apt-get update
+apt-get install nginx -y
+```
+
+---
+
+## LANGKAH 2 — Siapkan folder web dan file HTML
+
+### Lune:
+
+```bash
+mkdir -p /var/www/lune
+cp /root/profile_lune.html /var/www/lune/index.html
+```
+
+### Sciel:
+
+```bash
+mkdir -p /var/www/sciel
+cp /root/profile_sciel.html /var/www/sciel/index.html
+```
+
+### Gustave:
+
+```bash
+mkdir -p /var/www/gustave
+cp /root/profile_gustave.html /var/www/gustave/index.html
+```
+
+---
+
+## LANGKAH 3 — Buat log format kustom
+
+Semua node akan menggunakan format log yang sama seperti contoh di soal:
+
+```
+[01/Oct/2024:11:30:45 +0000] Jarkom Node Lune Access from 192.168.1.15 using method "GET /resep/bayam HTTP/1.1" returned status 200 with 2567 bytes sent in 0.038 seconds
+```
+
+Buat format log tersebut di konfigurasi masing-masing web server.
+
+---
+
+## LANGKAH 4 — Konfigurasi Nginx
+
+> Kita akan bikin file di `/etc/nginx/sites-available/`
+> dan symlink ke `/etc/nginx/sites-enabled/`
+
+---
+
+### Node **LUNE**
+
+```bash
+nano /etc/nginx/sites-available/lune
+```
+
+Isi dengan:
+
+```nginx
+server {
+    listen 80;
+    server_name lune33.com;
+
+    root /var/www/lune;
+    index index.html;
+
+    access_log /tmp/access.log custom;
+    error_log /tmp/error.log;
+
+    log_format custom '[$time_local] Jarkom Node Lune Access from $remote_addr using method "$request" returned status $status with $body_bytes_sent bytes sent in $request_time seconds';
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Aktifkan:
+
+```bash
+ln -s /etc/nginx/sites-available/lune /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+---
+
+### Node **SCIEL**
+
+```bash
+nano /etc/nginx/sites-available/sciel
+```
+
+Isi dengan:
+
+```nginx
+server {
+    listen 80;
+    server_name sciel33.com;
+
+    root /var/www/sciel;
+    index index.html;
+
+    access_log /tmp/access.log custom;
+    error_log /tmp/error.log;
+
+    log_format custom '[$time_local] Jarkom Node Sciel Access from $remote_addr using method "$request" returned status $status with $body_bytes_sent bytes sent in $request_time seconds';
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Aktifkan:
+
+```bash
+ln -s /etc/nginx/sites-available/sciel /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+---
+
+### Node **GUSTAVE**
+
+```bash
+nano /etc/nginx/sites-available/gustave
+```
+
+Isi dengan:
+
+```nginx
+server {
+    listen 80;
+    server_name gustave33.com;
+
+    root /var/www/gustave;
+    index index.html;
+
+    access_log /tmp/access.log custom;
+    error_log /tmp/error.log;
+
+    log_format custom '[$time_local] Jarkom Node Gustave Access from $remote_addr using method "$request" returned status $status with $body_bytes_sent bytes sent in $request_time seconds';
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Aktifkan:
+
+```bash
+ln -s /etc/nginx/sites-available/gustave /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+---
+
+## LANGKAH 5 — Uji Web Server
+
+Sekarang tes dari **client (Esquie, Monocco, atau Maelle):**
+
+```bash
+curl http://lune33.com
+curl http://sciel33.com
+curl http://gustave33.com
+```
+
+> Output HTML-nya harus menampilkan isi dari file profil yang sesuai.
+
+---
+
+## LANGKAH 6 — Cek Log Custom
+
+Cek isi `/tmp/access.log` di masing-masing web server:
+
+```bash
+tail -n 5 /tmp/access.log
+```
+
+hasilnya:
+
+```
+[31/Oct/2025:10:05:14 +0000] Jarkom Node Lune Access from 10.110.5.2 using method "GET / HTTP/1.1" returned status 200 with 1298 bytes sent in 0.003 seconds
+```
+
 
 <br>
 
 ## Soal 6
 
-> Setelah website berhasil dideploy pada masing-masing node web server dan halaman dapat menampilkan profil yang sesuai, buatlah custom access log ke file /tmp/access.log di masing-masing node web server menggunakan format log tertentu seperti di bawah:
->
->   - Tanggal dan waktu akses dalam format standar log.
->   - Nama node yang sedang diakses.
->   - Alamat IP klien yang mengakses website.
->   - Metode HTTP dan URI yang diakses oleh klien.
->   - Status respons HTTP yang diberikan oleh server.
->   - Jumlah byte yang dikirimkan dalam respons.
->   - Waktu yang dihabiskan oleh server untuk menangani permintaan.
->   - Contoh format log yang sesuai:
->     [01/Oct/2024:11:30:45 +0000] Jarkom Node Lune Access from 192.168.1.15 using method "GET /resep/bayam HTTP/1.1" returned status 200 with 2567 bytes sent in 0.038 seconds
+> Setelah website berhasil dideploy pada masing-masing node web server dan halaman dapat menampilkan profil yang sesuai,  buatlah custom access log ke file /tmp/access.log di masing-masing node web server menggunakan format log tertentu seperti di bawah:
+> - Tanggal dan waktu akses dalam format standar log.
+> - Nama node yang sedang diakses.
+> - Alamat IP klien yang mengakses website.
+> - Metode HTTP dan URI yang diakses oleh klien.
+> - Status respons HTTP yang diberikan oleh server.
+> - Jumlah byte yang dikirimkan dalam respons.
+> - Waktu yang dihabiskan oleh server untuk menangani permintaan.
+> - Contoh format log yang sesuai:
+>   [01/Oct/2024:11:30:45 +0000] Jarkom Node Lune Access from 192.168.1.15 using method "GET /resep/bayam HTTP/1.1" returned status 200 with 2567 bytes sent in 0.038 seconds
 
-> *After successfully deploying each website and verifying the correct profile page is displayed, create a custom access log in /tmp/access.log on each web server using the following format:*
-> *- Date and time of access (standard log format)*
-> *- Name of the node being accessed*
-> *- IP address of the client accessing the website*
-> *- HTTP method and URI accessed by the client*
-> *- HTTP response status code*
-> *- Number of bytes sent in the response*
-> *- Time taken by the server to process the request*
-> *- Example Log Format:*
-> *[01/Oct/2024:11:30:45 +0000] Jarkom Node Lune Access from 192.168.1.15 using method "GET /resep/bayam HTTP/1.1" returned status 200 with 2567 bytes sent in 0.038 seconds*
+> _After successfully deploying each website and verifying the correct profile page is displayed, create a custom access log in /tmp/access.log on each web server using the following format:_
+> _- Date and time of access (standard log format)_
+> _- Name of the node being accessed_
+> _- IP address of the client accessing the website_
+> _- HTTP method and URI accessed by the client_
+> _- HTTP response status code_
+> _- Number of bytes sent in the response_
+> _- Time taken by the server to process the request_
+> _- Example Log Format:_
+> _[01/Oct/2024:11:30:45 +0000] Jarkom Node Lune Access from 192.168.1.15 using method "GET /resep/bayam HTTP/1.1" returned status 200 with 2567 bytes sent in 0.038 seconds_
 
 **Answer:**
 
@@ -368,37 +921,145 @@
 
   - Explanation
 
-    Untuk menerapkan format log ini secara konsisten, dibuat file snippet di `/etc/nginx/snippets/log_format.conf` pada **setiap web server** (Lune, Sciel, Gustave):
+    ## Konfigurasi Log Format di Nginx
 
-    ```nginx
-    # Definisikan format log kustom
-    log_format jarkom_log '[$time_local] Jarkom Node $server_name Access from $remote_addr using method "$request" returned status $status with $body_bytes_sent bytes sent in $request_time seconds';
+### **Node Lune**
 
-    # Terapkan log ke file /tmp/access.log menggunakan format kustom
-    access_log /tmp/access.log jarkom_log;
-    ```
+```bash
+nano /etc/nginx/sites-available/lune
+```
 
-    Kemudian, di file konfigurasi situs Nginx (misal `/etc/nginx/sites-available/lune` dari Soal 5), direktif `access_log` diganti dengan `include` snippet ini:
+Isi:
 
-    ```nginx
-    server {
-        listen 80;
-        server_name lune33.com;
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Lune Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
 
-        root /var/www/lune;
-        index index.html;
+server {
+    listen 80;
+    server_name lune33.com;
 
-        # Ganti "access_log /tmp/access.log;" dengan include snippet:
-        include /etc/nginx/snippets/log_format.conf;
-        error_log /tmp/error.log; # error log tetap
-        
-        location / {
-            try_files $uri $uri/ =404;
-        }
+    root /var/www/lune;
+    index index.html;
+
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
     }
-    ```
+}
+```
 
-    Ini memastikan semua server block yang menyertakan file ini akan menggunakan format log `jarkom_log` yang sama persis seperti yang diminta.
+Simpan, lalu restart Nginx:
+
+```bash
+systemctl restart nginx
+```
+
+---
+
+### **Node Sciel**
+
+```bash
+nano /etc/nginx/sites-available/sciel
+```
+
+Isi dengan:
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Sciel Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+server {
+    listen 80;
+    server_name sciel33.com;
+
+    root /var/www/sciel;
+    index index.html;
+
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Restart:
+
+```bash
+systemctl restart nginx
+```
+
+---
+
+### **Node Gustave**
+
+```bash
+nano /etc/nginx/sites-available/gustave
+```
+
+Isi dengan:
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Gustave Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+server {
+    listen 80;
+    server_name gustave33.com;
+
+    root /var/www/gustave;
+    index index.html;
+
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+Restart:
+
+```bash
+systemctl restart nginx
+```
+
+---
+
+## Pengujian Log
+
+1. Dari client (Esquie / Monocco / Maelle), akses semua domain:
+
+   ```bash
+   curl http://lune33.com
+   curl http://sciel33.com
+   curl http://gustave33.com
+   ```
+
+2. Lalu di masing-masing web server (misal di Lune):
+
+   ```bash
+   cat /tmp/access.log
+   ```
+
+3. Hasilnya akan mirip seperti ini
+
+   ```
+   [31/Oct/2025:14:45:12 +0000] Jarkom Node Lune Access from 10.110.5.2 using method "GET / HTTP/1.1" returned status 200 with 1423 bytes sent in 0.004 seconds
+   [31/Oct/2025:14:45:15 +0000] Jarkom Node Lune Access from 10.110.5.3 using method "GET / HTTP/1.1" returned status 200 with 1423 bytes sent in 0.003 seconds
+   ```
+
+---
+
+
 
 <br>
 
@@ -406,9 +1067,8 @@
 
 > Gustave merupakan web server yang tidak disarankan untuk dilihat oleh publik. Maka dari itu, ubahlah konfigurasi nginx sehingga halaman profil Gustave menjadi hanya bisa di akses melalui port 8080 dan 8888.
 
-> *The Gustave web server should not be publicly accessible.
-> Modify the Nginx configuration so that Gustave’s profile page can only be accessed through ports 8080 and 8888.*
-
+> _The Gustave web server should not be publicly accessible.
+Modify the Nginx configuration so that Gustave’s profile page can only be accessed through ports 8080 and 8888._
 **Answer:**
 
   - Screenshot
@@ -417,39 +1077,84 @@
 
   - Explanation
 
-    Di node **Gustave**, file konfigurasi Nginx `/etc/nginx/sites-available/gustave` diubah. Server block yang sebelumnya `listen 80;` (dari Soal 5/6) dihapus atau diubah.
+   Website profil `gustave33.com` hanya bisa dibuka lewat:
 
-    Konfigurasi Nginx untuk Gustave (hanya profil) diubah menjadi:
+```
+http://gustave33.com:8080
+http://gustave33.com:8888
+```
 
-    ```nginx
-    # Hapus/jangan buat server block "listen 80" untuk profil
+Kalau tanpa port (misal `http://gustave33.com`), maka tidak akan merespons.
 
-    # profile di 8080
-    server {
-        listen 8080;
-        server_name gustave33.com;
+---
 
-        root /var/www/gustave;
-        index index.html;
-        include /etc/nginx/snippets/log_format.conf;
-        error_log /tmp/error.log;
+## Langkah Konfigurasi Nginx di Node Gustave
+
+Masuk ke node **Gustave**, lalu buka konfigurasi Nginx-nya:
+
+```bash
+nano /etc/nginx/sites-available/gustave
+```
+
+Kemudian ubah isi file menjadi seperti ini 
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Gustave Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+server {
+    listen 8080;
+    listen 8888;
+    server_name gustave33.com;
+
+    root /var/www/gustave;
+    index index.html;
+
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
     }
+}
+```
 
-    # profile di 8888
-    server {
-        listen 8888;
-        server_name gustave33.com;
+---
 
-        root /var/www/gustave;
-        index index.html;
-        include /etc/nginx/snippets/log_format.conf;
-        error_log /tmp/error.log;
-    }
+## Terapkan Konfigurasi
 
-    # (Server block untuk halaman info di port 8200 dari soal 8 akan ditambahkan terpisah)
-    ```
+   ```bash
+   ln -s /etc/nginx/sites-available/gustave /etc/nginx/sites-enabled/
+   ```
+2. Hapus default config (jika belum dihapus):
 
-    Setelah `systemctl reload nginx`, profil Gustave tidak lagi dapat diakses melalui port 80, melainkan hanya melalui port 8080 dan 8888.
+   ```bash
+   rm /etc/nginx/sites-enabled/default
+   ```
+3. Restart Nginx:
+
+   ```bash
+   systemctl restart nginx
+   ```
+
+---
+
+## Uji Coba
+
+Dari **client (Esquie / Monocco / Maelle)**, coba perintah berikut:
+
+```bash
+# Harus berhasil
+curl http://gustave33.com:8080
+curl http://gustave33.com:8888
+
+# Harus gagal (karena port 80 tidak aktif)
+curl http://gustave33.com
+```
+
+---
+
 
 <br>
 
@@ -457,11 +1162,11 @@
 
 > Untuk mempermudah program ekspedisi, maka node Lune, Sciel, Gustave sepakat untuk membuat halaman informasi dengan konten yang sama. Maka dari itu, buatlah lagi 1 server block di dalam konfigurasi nginx yang akan menyajikan file HTML ini. Namun, mereka ingin menyajikan halaman informasi tersebut di port yang berbeda-beda, yaitu Lune menggunakan port 8000, Sciel menggunakan port 8100, dan Gustave menggunakan port 8200.
 
-> *To simplify coordination for the expedition program, Lune, Sciel, and Gustave agree to create a shared information page with the same content. Add one more server block in each node’s Nginx configuration that serves this HTML file
-> Each node should serve the information page on a different port:*
-> *- Lune → port 8000*
-> *- Sciel → port 8100*
-> *- Gustave → port 8200*
+> _To simplify coordination for the expedition program, Lune, Sciel, and Gustave agree to create a shared information page with the same content. Add one more server block in each node’s Nginx configuration that serves this HTML file 
+Each node should serve the information page on a different port:_
+> _- Lune → port 8000_
+> _- Sciel → port 8100_
+> _- Gustave → port 8200_
 
 **Answer:**
 
@@ -471,64 +1176,194 @@
 
   - Explanation
 
-    Di setiap node web server, *ditambahkan* satu `server` block baru ke file konfigurasi Nginx mereka untuk menyajikan `info.html` (yang sudah disalin di Soal 5) di port yang diminta.
+   ## Tujuan
 
-      * **Lune (`/etc/nginx/sites-available/lune`):**
-        (Tambahkan blok ini di bawah blok `server { listen 80; ... }`)
-        ```nginx
-        server {
-            listen 8000;
-            server_name info.lune33.com; # opsional
-            root /var/www/lune;
-            index info.html;
-            include /etc/nginx/snippets/log_format.conf;
-            error_log /tmp/error.log;
-        }
-        ```
-      * **Sciel (`/etc/nginx/sites-available/sciel`):**
-        (Tambahkan blok ini di bawah blok `server { listen 80; ... }`)
-        ```nginx
-        server {
-            listen 8100;
-            server_name info.sciel33.com; # opsional
-            root /var/www/sciel;
-            index info.html;
-            include /etc/nginx/snippets/log_format.conf;
-            error_log /tmp/error.log;
-        }
-        ```
-      * **Gustave (`/etc/nginx/sites-available/gustave`):**
-        (Tambahkan blok ini di bawah blok `server { listen 8080; ... }` dan `listen 8888; ... }`)
-        ```nginx
-        server {
-            listen 8200;
-            server_name info.gustave33.com; # opsional
-            root /var/www/gustave;
-            index info.html;
-            include /etc/nginx/snippets/log_format.conf;
-            error_log /tmp/error.log;
-        }
-        ```
+Semua node punya halaman:
 
-    Reload Nginx di ketiga node.
+* Lune → `http://lune33.com:8000`
+* Sciel → `http://sciel33.com:8100`
+* Gustave → `http://gustave33.com:8200`
+
+Isi halaman sama (file `info.html`).
+
+---
+
+## Struktur Folder (di tiap node web)
+
+Pastikan foldernya sudah ada:
+
+```bash
+mkdir -p /var/www/lune
+mkdir -p /var/www/sciel
+mkdir -p /var/www/gustave
+```
+
+Salin file **info.html** ke masing-masing:
+
+```bash
+cp /root/info.html /var/www/lune/info.html
+cp /root/info.html /var/www/sciel/info.html
+cp /root/info.html /var/www/gustave/info.html
+```
+
+---
+
+## Konfigurasi Nginx per Node
+
+### Lune (`/etc/nginx/sites-available/lune`)
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Lune Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+server {
+    listen 80;
+    server_name lune33.com;
+    root /var/www/lune;
+    index index.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+}
+
+# Halaman informasi di port 8000
+server {
+    listen 8000;
+    server_name lune33.com;
+    root /var/www/lune;
+    index info.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+---
+
+### Sciel (`/etc/nginx/sites-available/sciel`)
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Sciel Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+server {
+    listen 80;
+    server_name sciel33.com;
+    root /var/www/sciel;
+    index index.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+}
+
+# Halaman informasi di port 8100
+server {
+    listen 8100;
+    server_name sciel33.com;
+    root /var/www/sciel;
+    index info.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+---
+
+### Gustave (`/etc/nginx/sites-available/gustave`)
+
+> Ingat: Halaman profil tetap hanya bisa diakses via port 8080 dan 8888,
+> sedangkan info di port 8200.
+
+```nginx
+log_format custom_log_format '[$time_local] Jarkom Node Gustave Access from $remote_addr '
+                             'using method "$request" returned status $status '
+                             'with $body_bytes_sent bytes sent in $request_time seconds';
+
+# Halaman profil (hanya port 8080 dan 8888)
+server {
+    listen 8080;
+    listen 8888;
+    server_name gustave33.com;
+    root /var/www/gustave;
+    index index.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+}
+
+# Halaman informasi di port 8200
+server {
+    listen 8200;
+    server_name gustave33.com;
+    root /var/www/gustave;
+    index info.html;
+    access_log /tmp/access.log custom_log_format;
+    error_log /tmp/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+---
+
+## Aktifkan Konfigurasi
+
+Jalankan di masing-masing node:
+
+```bash
+ln -s /etc/nginx/sites-available/lune /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/sciel /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/gustave /etc/nginx/sites-enabled/
+
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+---
+
+## Testing dari Client
+
+Jalankan di node client (misal Esquie):
+
+```bash
+# Halaman profil (port 80)
+curl http://lune33.com
+curl http://sciel33.com
+curl http://gustave33.com:8080
+
+# Halaman informasi (port unik)
+curl http://lune33.com:8000
+curl http://sciel33.com:8100
+curl http://gustave33.com:8200
+```
+
+---
+
 
 <br>
 
 ## Soal 9
 
 > Untuk mempermudah akses ke profil tiap anggota ekspedisi, buatlah 1 domain lagi yaitu "expeditioners.com" yang akan mengarah ke Alicia. Lalu, untuk mencegah overload dari salah satu web server, konfigurasikan reverse proxy Alicia agar bisa forward request ke server yang sesuai berdasarkan URL profile yang diminta oleh klien dengan ketentuan sebagai berikut:
->
->   - Request untuk “[expeditioners.com/profil\_lune](https://www.google.com/search?q=https://expeditioners.com/profil_lune)” harus dialihkan ke halaman profil web server Lune.
->   - Request untuk “[expeditioners.com/profil\_sciel](https://www.google.com/search?q=https://expeditioners.com/profil_sciel)” harus dialihkan ke halaman profil web server Sciel.
->   - Request untuk “[expeditioners.com/profil\_gustave](https://www.google.com/search?q=https://expeditioners.com/profil_gustave)” harus dialihkan ke halaman profil web server Gustave.
->     Jika terdapat request ke URL selain profil yang ditentukan, reverse proxy akan mengalihkan ke halaman informasi pada web server Lune.
+> -  Request untuk “expeditioners.com/profil_lune” harus dialihkan ke halaman profil web server Lune.
+> -  Request untuk “expeditioners.com/profil_sciel” harus dialihkan ke halaman profil web server Sciel.
+> -  Request untuk “expeditioners.com/profil_gustave” harus dialihkan ke halaman profil web server Gustave.
+> Jika terdapat request ke URL selain profil yang ditentukan, reverse proxy akan mengalihkan ke halaman informasi pada web server Lune.
 
-> *To make it easier to access each member’s profile, create a new domain “expeditioners.com” that points to Alicia. "
-> Configure Alicia’s reverse proxy (Nginx) to forward requests to the correct web server based on the requested URL, with the following rules:*
-> *- Request URL [expeditioners.com/profil\_lune](https://www.google.com/search?q=https://expeditioners.com/profil_lune), Forward To Lune’s profile page*
-> *- Request URL [expeditioners.com/profil\_sciel](https://www.google.com/search?q=https://expeditioners.com/profil_sciel), Forward To Sciel’s profile page*
-> *- Request URL [expeditioners.com/profil\_gustave](https://www.google.com/search?q=https://expeditioners.com/profil_gustave), Forward To Gustave’s profile page*
-> *- Any other URL, Forward To Lune’s information page*
+> _To make it easier to access each member’s profile, create a new domain “expeditioners.com” that points to Alicia. "
+Configure Alicia’s reverse proxy (Nginx) to forward requests to the correct web server based on the requested URL, with the following rules:_
+> _- Request URL expeditioners.com/profil_lune, Forward To Lune’s profile page_
+> _- Request URL expeditioners.com/profil_sciel, Forward To Sciel’s profile page_
+> _- Request URL expeditioners.com/profil_gustave, Forward To Gustave’s profile page_
+> _- Any other URL, Forward To Lune’s information page_
 
 **Answer:**
 
@@ -538,50 +1373,149 @@
 
   - Explanation
 
-    1.  **DNS (di Renoir):** Tambahkan A record di file zona `/etc/bind/zones/db.lune33.com` (atau zona lain yang sesuai, atau buat zona baru) untuk `expeditioners.com` ke IP Alicia.
-        ```conf
-        expeditioners.com. IN A 10.110.4.10
-        ```
-    2.  **Nginx (di Alicia - 10.110.4.10):**
-        Instal Nginx (`apt-get install nginx -y`). Buat file konfigurasi `/etc/nginx/sites-available/expeditioners`:
-        ```nginx
-        server {
-            listen 80;
-            server_name expeditioners.com;
+    ## Langkah-Langkah Konfigurasi Reverse Proxy (Node Alicia)
 
-            # Request untuk "/profil_lune" (exact match)
-            location = /profil_lune {
-                proxy_pass http://10.110.2.10/;       # Lune profile (port 80)
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-            }
+### Tambahkan domain di DNS Master (Renoir)
 
-            # Request untuk "/profil_sciel" (exact match)
-            location = /profil_sciel {
-                proxy_pass http://10.110.2.11/;       # Sciel profile (port 80)
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-            }
+Supaya domain `expeditioners.com` bisa dikenali oleh semua client, tambahkan di file zona DNS Renoir.
 
-            # Request untuk "/profil_gustave" (exact match)
-            location = /profil_gustave {
-                proxy_pass http://10.110.2.12:8080/;  # Gustave profile (port 8080)
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-            }
+Edit file zone di **Renoir**:
 
-            # Request lain (fallback)
-            location / {
-                # Sesuai soal 9, fallback ke halaman info Lune
-                proxy_pass http://10.110.2.10:8000/; # Halaman info Lune (port 8000)
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-            }
-            
-            access_log /var/log/nginx/expeditioners_access.log;
-        }
-        ```
-    3.  Aktifkan situs di Alicia (`ln -s ...`, `rm /etc/nginx/sites-enabled/default`, `systemctl reload nginx`).
+```bash
+nano /etc/bind/sites/db.lune33.com
+```
+
+Tambahkan di paling bawah (setelah baris terakhir):
+
+```
+expeditioners.com.   IN  A  10.110.4.2
+```
+
+Atau bisa juga buat file baru (lebih bersih):
+
+```bash
+cat > /etc/bind/sites/db.expeditioners.com <<EOF
+$TTL 604800
+@ IN SOA expeditioners.com. root.expeditioners.com. (
+2025103101
+604800
+86400
+2419200
+604800 )
+;
+@       IN  NS  expeditioners.com.
+@       IN  A   10.110.4.2    ; IP node Alicia (Reverse Proxy)
+EOF
+```
+
+Lalu tambahkan ke daftar zona DNS:
+
+```bash
+echo 'zone "expeditioners.com" {
+    type master;
+    file "/etc/bind/sites/db.expeditioners.com";
+};' >> /etc/bind/named.conf.local
+```
+
+Restart bind9:
+
+```bash
+systemctl restart bind9
+```
+
+---
+
+### Konfigurasi Nginx di Alicia (Reverse Proxy)
+
+Instal Nginx (kalau belum):
+
+```bash
+apt-get update
+apt-get install nginx -y
+```
+
+Lalu buat konfigurasi baru:
+
+```bash
+nano /etc/nginx/sites-available/expeditioners.com
+```
+
+Isi dengan konfigurasi berikut 
+
+```nginx
+# Load balancing untuk halaman informasi (Round Robin)
+upstream info_servers {
+    server 10.110.2.2:8000;   # Lune info
+    server 10.110.2.3:8100;   # Sciel info
+    server 10.110.2.4:8200;   # Gustave info
+}
+
+server {
+    listen 80;
+    server_name expeditioners.com www.expeditioners.com;
+
+    # === ROUTING BERDASARKAN URL ===
+    location /profil_lune {
+        proxy_pass http://10.110.2.2;  # Lune profil
+    }
+
+    location /profil_sciel {
+        proxy_pass http://10.110.2.3;  # Sciel profil
+    }
+
+    location /profil_gustave {
+        proxy_pass http://10.110.2.4:8080;  # Gustave profil (ingat: port 8080)
+    }
+
+    # === ROUTING DEFAULT / UNDEFINED PATH ===
+    # Semua request lain diarahkan ke halaman informasi
+    location / {
+        proxy_pass http://info_servers;
+    }
+}
+```
+
+---
+
+### Aktifkan dan restart Nginx
+
+```bash
+ln -s /etc/nginx/sites-available/expeditioners.com /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+---
+
+### Uji Coba di Client (Esquie, Monocco, Maelle)
+
+Pastikan `resolv.conf` client mengarah ke DNS Renoir:
+
+```bash
+echo "nameserver 10.110.3.2" > /etc/resolv.conf
+```
+
+Kemudian test:
+
+```bash
+# Profil masing-masing
+curl http://expeditioners.com/profil_lune
+curl http://expeditioners.com/profil_sciel
+curl http://expeditioners.com/profil_gustave
+
+# Path tidak dikenal → harus menampilkan halaman info
+curl http://expeditioners.com/halo
+curl http://expeditioners.com/
+```
+
+---
+
+Coba jalankan perintah ini beberapa kali:
+
+```bash
+curl http://expeditioners.com/
+```
+---
 
 <br>
 
@@ -589,8 +1523,8 @@
 
 > Untuk mendistribusikan traffic halaman informasi, atur Reverse Proxy Alicia agar dapat membagi pekerjaan kepada web server Lune, Sciel, dan Gustave secara optimal menggunakan algoritma Round-robin. Pastikan target pembagian load merupakan halaman informasi, bukan halaman profil masing-masing web server.
 
-> *To distribute traffic for the information page, configure the reverse proxy (Alicia) to use Round-robin load balancing between the three web servers: Lune, Sciel, and Gustave.
-> Ensure that only the information page is included in the load-balancing configuration - not the profile pages.*
+> _To distribute traffic for the information page, configure the reverse proxy (Alicia) to use Round-robin load balancing between the three web servers: Lune, Sciel, and Gustave.
+Ensure that only the information page is included in the load-balancing configuration - not the profile pages._
 
 **Answer:**
 
@@ -600,49 +1534,125 @@
 
   - Explanation
 
-    Di node **Alicia**, file konfigurasi `/etc/nginx/sites-available/expeditioners` (dari Soal 9) dimodifikasi untuk menggunakan `upstream` (yang secara default menggunakan Round-robin) untuk halaman informasi.
+## Pastikan semua node web server punya halaman info
 
-    ```nginx
-    # Definisikan grup server untuk halaman info (Round-robin)
-    upstream info_backend {
-        # Target pembagian load adalah halaman informasi
-        server 10.110.2.10:8000;  # Lune info port 8000
-        server 10.110.2.11:8100;  # Sciel info port 8100
-        server 10.110.2.12:8200;  # Gustave info port 8200
+Sebelum lanjut ke Reverse Proxy, pastikan:
+
+| Node        | File HTML   | Lokasi                    | Port   |
+| ----------- | ----------- | ------------------------- | ------ |
+| **Lune**    | `info.html` | `/var/www/info/info.html` | `8000` |
+| **Sciel**   | `info.html` | `/var/www/info/info.html` | `8100` |
+| **Gustave** | `info.html` | `/var/www/info/info.html` | `8200` |
+
+Pastikan file-nya sama (isi halaman informasi sama persis di ketiga server).
+
+Kalau belum dibuat, contohnya:
+
+```bash
+mkdir -p /var/www/info
+cp /path/info.html /var/www/info/index.html
+```
+
+---
+
+## Masuk ke node Alicia (Reverse Proxy)
+
+Edit file konfigurasi nginx yang sebelumnya sudah kamu buat untuk `expeditioners.com`:
+
+```bash
+nano /etc/nginx/sites-available/expeditioners.com
+```
+
+---
+
+## Tambahkan Load Balancer (Round Robin)
+
+Tambahkan (atau pastikan sudah ada) bagian berikut di atas `server { ... }`:
+
+```nginx
+# ================================
+# LOAD BALANCER ROUND ROBIN
+# ================================
+upstream info_servers {
+    server 10.110.2.2:8000;   # Lune info
+    server 10.110.2.3:8100;   # Sciel info
+    server 10.110.2.4:8200;   # Gustave info
+}
+```
+
+Kemudian pastikan dalam blok `server` bagian `/` diarahkan ke upstream tersebut:
+
+```nginx
+server {
+    listen 80;
+    server_name expeditioners.com www.expeditioners.com;
+
+    # === ROUTING BERDASARKAN URL PROFIL ===
+    location /profil_lune {
+        proxy_pass http://10.110.2.2;  # Lune profil
     }
 
-    server {
-        listen 80;
-        server_name expeditioners.com;
-
-        # (Blok location /profil_lune, /profil_sciel, /profil_gustave tetap sama
-        #  dan TIDAK menggunakan upstream 'info_backend')
-        location = /profil_lune {
-            proxy_pass http://10.110.2.10/;
-            proxy_set_header Host $host;
-        }
-        location = /profil_sciel {
-            proxy_pass http://10.110.2.11/;
-            proxy_set_header Host $host;
-        }
-        location = /profil_gustave {
-            proxy_pass http://10.110.2.12:8080/;
-            proxy_set_header Host $host;
-        }
-
-        # Modifikasi fallback location (Soal 9)
-        location / {
-            # Ubah dari direct proxy_pass ke proxy_pass upstream
-            proxy_pass http://info_backend/; 
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-        
-        access_log /var/log/nginx/expeditioners_access.log;
+    location /profil_sciel {
+        proxy_pass http://10.110.2.3;  # Sciel profil
     }
-    ```
 
-    Setelah `systemctl reload nginx` di Alicia, setiap request ke `expeditioners.com/` (atau path lain selain profil) akan didistribusikan secara bergantian (Round-robin) ke Lune (port 8000), Sciel (port 8100), dan Gustave (port 8200).
+    location /profil_gustave {
+        proxy_pass http://10.110.2.4:8080;  # Gustave profil (ingat port 8080)
+    }
+
+    # === LOAD BALANCING UNTUK HALAMAN INFORMASI ===
+    location / {
+        proxy_pass http://info_servers;
+    }
+}
+```
+
+> Secara default, Nginx akan menggunakan algoritma **Round Robin**, jadi kamu **tidak perlu menulis `least_conn` atau `ip_hash`**.
+> Ia otomatis membagi giliran ke server 1, 2, 3 secara bergantian.
+
+---
+
+## Aktifkan & restart nginx
+
+```bash
+ln -s /etc/nginx/sites-available/expeditioners.com /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default 2>/dev/null
+systemctl restart nginx
+```
+
+---
+
+## Pengujian Load Balancer dari Client
+
+Pastikan client pakai DNS Renoir:
+
+```bash
+echo "nameserver 10.110.3.2" > /etc/resolv.conf
+```
+
+Lalu test dari client:
+
+```bash
+curl http://expeditioners.com/
+curl http://expeditioners.com/
+curl http://expeditioners.com/
+```
+
+Setiap kali dijalankan, hasil HTML yang muncul harus **berbeda node** (misalnya pertama dari Lune, kedua dari Sciel, ketiga dari Gustave, lalu berulang).
+
+---
+
+## Hasil Akhir yang Diharapkan
+
+| URL                                     | Arah ke                                            | Catatan                 |
+| --------------------------------------- | -------------------------------------------------- | ----------------------- |
+| `expeditioners.com/profil_lune`         | Lune (10.110.2.2)                                  | Halaman profil          |
+| `expeditioners.com/profil_sciel`        | Sciel (10.110.2.3)                                 | Halaman profil          |
+| `expeditioners.com/profil_gustave`      | Gustave (10.110.2.4:8080)                          | Halaman profil          |
+| `expeditioners.com/` *(atau path lain)* | Round robin ke Lune:8000, Sciel:8100, Gustave:8200 | Halaman info bergantian |
+
+---
+
 
 <br>
 
